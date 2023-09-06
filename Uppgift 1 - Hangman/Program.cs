@@ -1,16 +1,16 @@
-﻿string[] ordLista = {"Vispgrädde",
-      "Ukulele",
-      "Innebandyspelare",
-      "Flaggstång",
-      "Yxa",
-      "Havsfiske",
-      "Prisma",
-      "Landsbygd",
-      "Generositet",
-      "Lyckosam",
-      "Perrong",
-      "Samarbeta",
-      "Välartad"};
+﻿string[] ordLista = {"vispgrädde",
+      "ukulele",
+      "innebandyspelare",
+      "flaggstång",
+      "yxa",
+      "havsfiske",
+      "prisma",
+      "landsbygd",
+      "generositet",
+      "lyckosam",
+      "perrong",
+      "samarbeta",
+      "välartad"};
 
 string[] betydelseLista = {"Uppvispad grädde.",
       "Ett fyrsträngat instrument med ursprung i Portugal.",
@@ -26,7 +26,7 @@ string[] betydelseLista = {"Uppvispad grädde.",
       "Att arbeta tillsamans mot ett gemensamt mål.",
       "Att någon är väluppfostrad, skötsam, eller lovande."};
 
-string antalGissningar = "5";
+int antalGissningar = 5;
 List<string> gissningarLista = new List<string>();
 
 int nummer = slumpaNummer(); // Slumpa ett nummer tidigt så att den kan återanvändas.
@@ -34,44 +34,31 @@ string ord = ordLista[nummer];
 string betydelse = betydelseLista[nummer];
 
 
-Console.WriteLine("Hänga gubbe!\nFörsök att gissa ordet en bokstav i taget.\nDu har " + antalGissningar + " gissningar kvar.\n");
-
-
-Console.WriteLine(ord); // TA BORT
-Console.WriteLine("\nDina gissningar: ");
-Console.WriteLine();
-
-string gissning = Console.ReadLine();
-gissningarLista.Add(gissning);
-
-Console.WriteLine(gissningKoll(gissning));
-
-gissning = Console.ReadLine();
-gissningarLista.Add(gissning);
-
-Console.WriteLine(gissningKoll(gissning));
-
-
-foreach (string bokstav in gissningarLista)
+string ordgrej = string.Empty; //??
+while (svarsKoll(gissningarLista))
 {
-    Console.WriteLine(bokstav);
+
+    Console.WriteLine("Hänga gubbe!\nFörsök att gissa ordet en bokstav i taget.\nDu har " + antalGissningar + " gissningar kvar.\n");
+    Console.WriteLine(ord); // TA BORT
+    Console.WriteLine("\nDina gissningar: ");
+
+    string gissning = Console.ReadLine(); //Felhantera
+    gissningarLista.Add(gissning);
+
+    Console.WriteLine("\nGissning " + gissningKoll(gissning));
+    Console.WriteLine("Bokstav: ");
+
+    foreach (string bokstav in gissningarLista)
+    {
+        Console.Write(bokstav + " ");
+        
+    }
+    
+    Console.WriteLine("\nAntal gissningar: " + antalGissningar);
+    
 }
 
-Console.WriteLine(antalGissningar);
-
-
-//if (ord.Contains(gissning)){
-//    gissningarLista.Add(gissning);
-//}
-
-//else
-//{
-//    gissningarLista.Add(gissning);
-//    antalGissningar -= 1;
-//}
-
-//Console.WriteLine(gissningarLista[0]);
-//Console.WriteLine(antalGissningar.ToString());
+Console.WriteLine("Du vann :)");
 
 
 int slumpaNummer() // Slumpa ett nummer mellan 0 och 14 och returnera som en int.
@@ -81,25 +68,37 @@ int slumpaNummer() // Slumpa ett nummer mellan 0 och 14 och returnera som en int
 
 }
 
-
 string gissningKoll(string ordInput)
 {
-    string ordgrej = ""; //Det gissade ordet printar ut kända chars. t.ex k_k_o för kakao om K och O är känt.
+    ordgrej = ""; //Det gissade ordet printar ut kända chars. t.ex k_k_o för kakao om K och O är känt.
     foreach (char i in ord) //För varje karaktär i ordet
     {
-        foreach (string c in gissningarLista) //För varje bokstav i den gissade listan
+        foreach (string c in gissningarLista)//För varje bokstav i listan av gissningar
         {
-            if (i == c[0]) // Om ordet innehåller en bokstav som har gissats, lägg till den i ordgrej för att bygga ihop stringen.
+            if (i.ToString() == c) // Om ordet innehåller en bokstav som har gissats, lägg till den i ordgrej för att bygga ihop stringen.
             {
-                ordgrej += c.ToString();
+                ordgrej += c;
+                
             }
 
-            else // Om bokstaven inte har gissats, lägg ut ett _
+            else if (i.ToString() != c)
             {
                 ordgrej += "_";
+                
             }
         }
     }
-
     return ordgrej;
+}
+
+bool svarsKoll(List<String> svarsInput)
+{
+    foreach (string c in svarsInput)
+    {
+        if (!ord.Contains(c))
+        {
+            return false;
+        }
+    }
+
 }

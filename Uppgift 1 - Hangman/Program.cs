@@ -1,7 +1,10 @@
 ﻿using System.ComponentModel;
+using System.Diagnostics;
 using System.Reflection.Metadata.Ecma335;
+using System.Security.Cryptography;
+
 bool spelaIgen = true;
-while (spelaIgen)
+while (spelaIgen) // Sålänge spelaren vill fortsätta spela, loopa all kod.
 {
     string[] ordLista = {"vispgrädde",
           "ukulele",
@@ -31,27 +34,20 @@ while (spelaIgen)
           "Att arbeta tillsamans mot ett gemensamt mål.",
           "Att någon är väluppfostrad, skötsam, eller lovande."};
 
+    int nummer = slumpaNummer();
+
     int antalGissningar = 5;
-    List<char> gissningarLista = new List<char>();
-
-    int nummer = slumpaNummer(); // Slumpa ett nummer tidigt så att den kan återanvändas.
-
     string ord = ordLista[nummer];
     string betydelse = betydelseLista[nummer];
-    string gissning = "";
+    string gissning = ""; //Rensar och behåller den nuvarande loopens gissning
+    string gissningarLista = ""; //Chars som har gissats
     bool ogiltigGissning = false;
     bool redanGissad = false;
 
-    int slumpaNummer() // slumpa ett nummer mellan 0 och 14 och returnera som en int.
+    
+
+    while (!kollaOrdKorrekt(gissningarLista, ord) && antalGissningar > 0) //Medans gissningarLista inte innehåller alla bokstäver i ord och gissningar är mer än 0, loopa.
     {
-        Random rand = new Random();
-        return rand.Next(13);
-
-    }
-
-    while (!kollaOrdKorrekt(gissningarLista, ord) && antalGissningar > 0) //Medans gissningarLista inte innehåller alla bokstäver i ord, loopa.
-    {
-
         byggSpelText();
 
         if (ogiltigGissning) //Om gissning var ogiltig i tidigare loop, visa text och återställ bool för nästa loop.
@@ -68,19 +64,20 @@ while (spelaIgen)
         }
 
         gissning = Console.ReadLine().ToLower();
+
         if (verifieraInput(gissning))
         {
-            if (gissningarLista.Contains(gissning[0]))
+            if (gissningarLista.Contains(gissning))
             {
                 redanGissad = true;
             }
 
             else
             {
-                string jämförOrd = byggUppOrd(gissningarLista);
-                gissningarLista.Add(gissning[0]);
+                string jämförOrd = byggUppOrd(gissningarLista, ord);
+                gissningarLista += gissning[0];
 
-                if (jämförOrd == byggUppOrd(gissningarLista))
+                if (jämförOrd == byggUppOrd(gissningarLista, ord))
                 {
                     antalGissningar--;
                 }
@@ -93,27 +90,44 @@ while (spelaIgen)
         }
     }
 
+
     if (antalGissningar <= 0)
     {
         byggSpelText();
         Console.WriteLine("Du har förlorat, vill du spela igen? y/n");
-        if (Console.ReadLine().ToLower() == "y")
+
+        do //Sålänge inte y eller n anges, loopa tills y eller n blir skrivet
         {
-            spelaIgen = true;
+            string slutSvar = Console.ReadLine().ToLower();
+            if (slutSvar == "y")
+            {
+                spelaIgen = true;
+                break;
+            }
+
+            else if (slutSvar == "n")
+            {
+                spelaIgen = false;
+                break;
+            }
+
+            else
+            {
+                Console.WriteLine("Felaktigt svar.");
+            }
         }
 
-        else if (Console.ReadLine().ToLower() == "n")
-        {
-            spelaIgen = false;
-        }
+        while (true);
     }
 
     else if (kollaOrdKorrekt(gissningarLista, ord))
     {
         byggSpelText();
+
+        Console.WriteLine("\nOrdförklaring: " + betydelse + "\n");
         Console.WriteLine("Du har vunnit, vill du spela igen? y/n");
 
-        do //Sålänge inte y eller n anges, loopa tills y eller n blir skrivet
+        do 
         {
             string slutSvar = Console.ReadLine().ToLower();
             if (slutSvar == "y")
@@ -138,208 +152,95 @@ while (spelaIgen)
         
     }
 
-    void byggSpelText()
+    void byggSpelText() // Bygger dynamiskt upp speltexten som visas i konsolen
     {
-        gissning = ""; //Rensa gissning
-        Console.Clear(); //Rensa konsolen för ny uppdaterad output
-        Console.WriteLine("Hänga gubbe!\nGissa ordet en bokstav i taget."); // Bygg upp speltexten dynamiskt med hjälp av metoden byggUppOrd & visaGissningar
-        Console.WriteLine("Ord: " + byggUppOrd(gissningarLista));
-        Console.WriteLine("\n****Ord: " + ord + "\n");
-        Console.WriteLine("\nDina gissningar: " + visaGissningar());
-        Console.WriteLine("Antal gissningar kvar: " + antalGissningar.ToString());
-    }
-
-    string visaGissningar() // Returnera vilka bokstäver som finns i gissningarLista i formatet: a, b, c, d, 
-    {
-        string gissningar = "";
-        foreach (char gissning in gissningarLista)
-        {
-            gissningar += gissning + ", ";
-        }
-        return gissningar;
-    }
-
-    bool verifieraInput(string input)
-    {
-        if (input.Count() == 1 && Char.IsLetter(input[0])) // Om det bara finns 1 bokstav & det är en bokstav, return true
-        {
-            return true;
-        }
-
-        else { return false; }
-    }
-
-    string byggUppOrd(List<char> gissLista)
-    {
-        string byggtOrd = "";
-        int i = 0; // Räknar om en bokstav har använts eller det behövs ett _
-        foreach (char bokstav in ord) // För varje bokstav i ordet
-        {
-            foreach (char gissning in gissLista) // För varje gissad bokstav i gissLista
-            {
-                i = 0; //Återställ räknaren
-                if (gissning == bokstav) // Om den gissade bokstaven stämmer med bokstaven i ordet
-                {
-                    byggtOrd += gissning; // Lägg till gissningen i en string
-                    i++; //Öka räknaren med 1
-                    break; //Bryt loopen eftersom vi redan har fått fram bokstaven
-                }
-            }
-
-            if (i != 1) // Om räknaren inte står på 1 (alltså att bokstaven inte finns i gissLista pga ovan loop) lägg till ett _ i ordet  
-            {
-                byggtOrd += "_";
-
-            }
-
-        }
-
-        return byggtOrd;
-    }
-
-    bool kollaOrdKorrekt(List<char> gissLista, string ord)
-    {
-        ord = ord.ToLower(); //Felhantering
-        HashSet<char> unikaChars = new HashSet<char>(ord); //Gör ett hashset av de unika bokstäverna. Hashset liknar en lista/array i att den kan innehållar flera värden, men bara UNIKA värden, inga dubletter.
-
-        foreach (char gissning in gissLista) // För varje gissad bokstav i listan
-        {
-            if (unikaChars.Contains(gissning)) // Om hashsetet innehåller en bokstav som har gissats, ta bort bokstaven från hashsetet.
-            {
-                unikaChars.Remove(gissning); // Ta bort den gissade bokstaven ifrån hashsetet, vi vet att den har gissats och behöver inte kollas igen. Så här trackar vi även ifall vi ska returnera sant eller falskt.
-            }
-        }
-
-        return unikaChars.Count == 0; // Om unikaChars är 0, returnera true, annars false.
+        gissning = ""; 
+        Console.Clear(); 
+        Console.WriteLine("Hänga gubbe!\nGissa ordet en bokstav i taget."); 
+        Console.WriteLine("\nOrd: " + byggUppOrd(gissningarLista, ord));
+        Console.WriteLine("\nAntal gissningar kvar: " + antalGissningar.ToString());
+        Console.WriteLine("\nDina gissningar: " + visaGissningar(gissningarLista));
     }
 }
 
+int slumpaNummer() // Slumpa ett nummer mellan 0 och 13 och returnera som en int.
+{
+    Random rand = new Random();
+    return rand.Next(13);
 
+}
 
+bool kollaOrdKorrekt(string gissLista, string ord) // Jämför spelarens gissade bokstäver med spelets ord
+{
 
+    string unikaChars = "";
 
+    foreach (char bokstav in ord)
+    {
+        if (!unikaChars.Contains(bokstav))
+        {
+            unikaChars += bokstav;
+        }
 
-//using System.ComponentModel;
+        else continue;
+    }
 
-//string[] ordLista = {"vispgrädde",
-//      "ukulele",
-//      "innebandyspelare",
-//      "flaggstång",
-//      "yxa",
-//      "havsfiske",
-//      "prisma",
-//      "landsbygd",
-//      "generositet",
-//      "lyckosam",
-//      "perrong",
-//      "samarbeta",
-//      "välartad"};
+    foreach (char givenBokstav in ord) 
+    {
+        foreach (char gissadBokstav in gissLista) 
+        {
+            if (gissadBokstav == givenBokstav) // Om den givna bokstaven har gissats, byt ut den mot Empty. När stringens Len är 0 vet vi att ordet har hittats
+            {
+                unikaChars = unikaChars.Replace(givenBokstav.ToString(), string.Empty);
+            }
+        }
+    }
 
-//string[] betydelseLista = {"Uppvispad grädde.",
-//      "Ett fyrsträngat instrument med ursprung i Portugal.",
-//      "En person som spelar sporten innebandy.",
-//      "En mast man hissar upp en flagga på.",
-//      "Verktyg för att hugga ved.",
-//      "Fiske till havs.",
-//      "Ett transparent optiskt element som bryter ljuset vid plana ytor.",
-//      "Geografiskt område med lantlig bebyggelse.",
-//      "En personlig egenskap där man vill dela med sig av det man har.",
-//      "Att man ofta, eller för stunden har tur.",
-//      "Den upphöjda yta som passagerare väntar på eller stiger på/av ett spårfordon.",
-//      "Att arbeta tillsamans mot ett gemensamt mål.",
-//      "Att någon är väluppfostrad, skötsam, eller lovande."};
+    return unikaChars.Length == 0; // Om ordet har hittats, skicka true för att avsluta eller fortsätta spelet
+}
 
-//int antalGissningar = 5;
-//List<string> gissningarLista = new List<string>();
+string byggUppOrd(string gissLista, string ord) //Bygger upp stringen för det som har gissats i ordet. 
+{
+    string byggtOrd = "";
+    int i = 0; // Räknar om en bokstav har använts eller det behövs ett _
+    foreach (char bokstav in ord) 
+    {
+        foreach (char gissning in gissLista) 
+        {
+            i = 0; 
+            if (gissning == bokstav) 
+            {
+                byggtOrd += gissning; 
+                i++; 
+                break; 
+            }
+        }
 
-//int nummer = slumpaNummer(); // Slumpa ett nummer tidigt så att den kan återanvändas.
-//string ord = ordLista[nummer];
-//string betydelse = betydelseLista[nummer];
+        if (i != 1) // Om räknaren inte står på 1 (alltså att bokstaven inte finns i gissLista pga ovan loop) lägg till ett _ i ordet  
+        {
+            byggtOrd += "_";
 
+        }
+    }
+    return byggtOrd;
+}
 
-//string ordgrej = string.Empty; //??
-//while (svarsKoll(gissningarLista)) // Så länge gissningarLista inte innehåller alla bokstäver i ordet, loopa programmet
-//{
+bool verifieraInput(string input) // Enkel inputsanering, endast enstaka bokstäver kommer igenom
+{
+    if (input.Count() == 1 && Char.IsLetter(input[0]))
+    {
+        return true;
+    }
 
-//    Console.WriteLine("Hänga gubbe!\nFörsök att gissa ordet en bokstav i taget.\nDu har " + antalGissningar + " gissningar kvar.\n");
-//    Console.WriteLine("****Ord: " + ord); // TA BORT
-//    Console.WriteLine("\nDina gissningar: ");
+    else return false;
+}
 
-//    string gissning = Console.ReadLine(); //Felhantera
-//    gissningarLista.Add(gissning);
-
-//    Console.WriteLine("\nGissning " + gissningKoll(gissning));
-//    Console.WriteLine("****Bokstav: ");
-
-//    foreach (string bokstav in gissningarLista)
-//    {
-//        Console.Write(bokstav + " ");
-
-//    }
-
-//    Console.WriteLine("\nAntal gissningar: " + antalGissningar);
-
-//}
-
-//Console.WriteLine("Du vann :)");
-
-
-//int slumpaNummer() // Slumpa ett nummer mellan 0 och 14 och returnera som en int.
-//{
-//    Random rand = new Random();
-//    return rand.Next(14);
-
-//}
-
-//string gissningKoll(string ordInput)
-//{
-//    ordgrej = ""; //Det gissade ordet printar ut kända chars. t.ex k_k_o för kakao om K och O är känt.
-//    foreach (char i in ord) //För varje karaktär i ordet
-//    {
-//        foreach (string c in gissningarLista)//För varje bokstav i listan av gissningar
-//        {
-//            if (i.ToString() == c) // Om ordet innehåller en bokstav som har gissats, lägg till den i ordgrej för att bygga ihop stringen.
-//            {
-//                ordgrej += c;
-//            }
-
-//            else if (i.ToString() != c)
-//            {
-//                ordgrej += "_";
-
-//            }
-//        }
-//    }
-//    return ordgrej;
-//}
-
-//bool svarsKoll(List<String> svarsInput)
-//{
-
-//    // För varje Index i SvarsInput, lägg dem i b
-//    //jämför ord och b, om 
-
-//    string b = "";
-//    //if (svarsinput.count == 0)
-//    //{
-//    //    return true;
-//    //}
-
-//    for (int i = 0; i < svarsInput.Count; i++)
-//    {
-//        b += svarsInput[i];
-//    }
-
-//    Console.WriteLine("*****GISSNINGSKOLL: " + gissningKoll(b));
-
-
-
-//    Console.WriteLine("****svarsinput: " + b);
-
-
-//    if (ord.Contains(b))
-//    {   return false;   }
-
-//    else { return true; }
-
-//}
+string visaGissningar(string gissningarLista) // Returnera vilka bokstäver som finns i gissningarLista i formatet: a, b, c, d, 
+{
+    string gissningar = "";
+    foreach (char gissning in gissningarLista)
+    {
+        gissningar += gissning + ", ";
+    }
+    return gissningar;
+}
